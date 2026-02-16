@@ -16,7 +16,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
         product.name.toLowerCase().includes(query.toLowerCase()) ||
         product.category?.toLowerCase().includes(query.toLowerCase()) ||
         product.description?.toLowerCase().includes(query.toLowerCase()) ||
-        product.company?.name.toLowerCase().includes(query.toLowerCase())
+        product.company?.name?.toLowerCase().includes(query.toLowerCase())
     );
 
     return (
