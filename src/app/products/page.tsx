@@ -7,7 +7,7 @@ export const revalidate = 0;
 export default async function ProductsPage() {
     const { data: products } = await supabase
         .from("products")
-        .select("*, companies(name, logo_url)")
+        .select("*, company:companies(name, logo_url)")
         .order("name");
 
     // Transform data to match Product type if needed, or rely on Supabase return type compatibility

@@ -165,6 +165,17 @@ export default function NewProductPage() {
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
+                            {(form.category === "Other" || (form.category && !categories.includes(form.category))) && (
+                                <input
+                                    className="input-field"
+                                    type="text"
+                                    placeholder="Enter custom category..."
+                                    style={{ marginTop: 8 }}
+                                    value={customCategory}
+                                    onChange={(e) => setCustomCategory(e.target.value)}
+                                    required
+                                />
+                            )}
                         </div>
 
                         {/* Description */}
