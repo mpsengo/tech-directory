@@ -139,6 +139,9 @@ export default function Navbar() {
                             <Link href="/products/new" className="btn-secondary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none" }}>
                                 + Add Product
                             </Link>
+                            <Link href="/admin" className="btn-secondary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none", marginLeft: 4 }}>
+                                Admin
+                            </Link>
                             <button
                                 onClick={handleSignOut}
                                 className="btn-secondary"

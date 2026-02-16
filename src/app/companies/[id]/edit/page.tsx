@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function EditCompanyPage() {
     const router = useRouter();
@@ -12,6 +13,7 @@ export default function EditCompanyPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+    const [customIndustry, setCustomIndustry] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -147,13 +149,29 @@ export default function EditCompanyPage() {
                                 id="industry"
                                 className="input-field"
                                 value={form.industry}
-                                onChange={(e) => setForm({ ...form, industry: e.target.value })}
+                                onChange={(e) => {
+                                    setForm({ ...form, industry: e.target.value });
+                                    if (e.target.value !== "Other") {
+                                        setCustomIndustry("");
+                                    }
+                                }}
                             >
                                 <option value="">Select industry...</option>
                                 {industries.map((ind) => (
                                     <option key={ind} value={ind}>{ind}</option>
                                 ))}
                             </select>
+                            {form.industry === "Other" && (
+                                <input
+                                    className="input-field"
+                                    type="text"
+                                    placeholder="Enter custom industry..."
+                                    style={{ marginTop: 8 }}
+                                    value={customIndustry}
+                                    onChange={(e) => setCustomIndustry(e.target.value)}
+                                    required
+                                />
+                            )}
                         </div>
 
                         {/* Description */}
@@ -182,18 +200,12 @@ export default function EditCompanyPage() {
                             />
                         </div>
 
-                        {/* Logo URL */}
-                        <div>
-                            <label className="label" htmlFor="logo_url">Logo URL</label>
-                            <input
-                                id="logo_url"
-                                className="input-field"
-                                type="url"
-                                placeholder="https://example.com/logo.png"
-                                value={form.logo_url}
-                                onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-                            />
-                        </div>
+                        {/* Logo */}
+                        <ImageUpload
+                            label="Company Logo"
+                            value={form.logo_url || ""}
+                            onChange={(url) => setForm({ ...form, logo_url: url })}
+                        />
 
                         {/* Founded Year */}
                         <div>

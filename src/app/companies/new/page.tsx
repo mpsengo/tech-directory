@@ -8,6 +8,7 @@ export default function NewCompanyPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+    const [customIndustry, setCustomIndustry] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -42,6 +43,14 @@ export default function NewCompanyPage() {
             return;
         }
 
+        const finalIndustry = form.industry === "Other" ? customIndustry.trim() : form.industry;
+
+        if (form.industry === "Other" && !finalIndustry) {
+            setToast({ type: "error", message: "Please specify the custom industry" });
+            setTimeout(() => setToast(null), 3000);
+            return;
+        }
+
         setLoading(true);
         try {
             const { error } = await supabase.from("companies").insert({
@@ -49,7 +58,7 @@ export default function NewCompanyPage() {
                 description: form.description.trim(),
                 website: form.website.trim(),
                 logo_url: form.logo_url.trim(),
-                industry: form.industry,
+                industry: finalIndustry,
                 founded_year: form.founded_year ? parseInt(form.founded_year) : null,
             });
 
@@ -108,6 +117,17 @@ export default function NewCompanyPage() {
                                     <option key={ind} value={ind}>{ind}</option>
                                 ))}
                             </select>
+                            {form.industry === "Other" && (
+                                <input
+                                    className="input-field"
+                                    type="text"
+                                    placeholder="Enter custom industry..."
+                                    style={{ marginTop: 8 }}
+                                    value={customIndustry}
+                                    onChange={(e) => setCustomIndustry(e.target.value)}
+                                    required
+                                />
+                            )}
                         </div>
 
                         {/* Description */}
@@ -136,18 +156,12 @@ export default function NewCompanyPage() {
                             />
                         </div>
 
-                        {/* Logo URL */}
-                        <div>
-                            <label className="label" htmlFor="logo_url">Logo URL</label>
-                            <input
-                                id="logo_url"
-                                className="input-field"
-                                type="url"
-                                placeholder="https://example.com/logo.png"
-                                value={form.logo_url}
-                                onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-                            />
-                        </div>
+                        {/* Company Logo */}
+                        <ImageUpload
+                            label="Company Logo"
+                            value={form.logo_url}
+                            onChange={(url) => setForm({ ...form, logo_url: url })}
+                        />
 
                         {/* Founded Year */}
                         <div>

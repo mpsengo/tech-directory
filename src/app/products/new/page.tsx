@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ImageUpload from "@/components/ImageUpload";
 import { supabase } from "@/lib/supabase";
 import { Company } from "@/lib/types";
 
@@ -10,6 +11,7 @@ export default function NewProductPage() {
     const [loading, setLoading] = useState(false);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+    const [customCategory, setCustomCategory] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -67,13 +69,21 @@ export default function NewProductPage() {
             return;
         }
 
+        const finalCategory = form.category === "Other" ? customCategory.trim() : form.category;
+
+        if (form.category === "Other" && !finalCategory) {
+            setToast({ type: "error", message: "Please specify the custom category" });
+            setTimeout(() => setToast(null), 3000);
+            return;
+        }
+
         setLoading(true);
         try {
             const { error } = await supabase.from("products").insert({
                 name: form.name.trim(),
                 company_id: form.company_id,
                 description: form.description.trim(),
-                category: form.category,
+                category: finalCategory,
                 link: form.link.trim(),
                 image_url: form.image_url.trim(),
             });
@@ -185,14 +195,10 @@ export default function NewProductPage() {
 
                         {/* Image URL */}
                         <div>
-                            <label className="label" htmlFor="image_url">Image URL</label>
-                            <input
-                                id="image_url"
-                                className="input-field"
-                                type="url"
-                                placeholder="https://example.com/product-image.png"
+                            <ImageUpload
+                                label="Product Image"
                                 value={form.image_url}
-                                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                                onChange={(url) => setForm({ ...form, image_url: url })}
                             />
                         </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ImageUpload from "@/components/ImageUpload";
 import { Company } from "@/lib/types";
 
 export default function EditProductPage() {
@@ -14,6 +15,7 @@ export default function EditProductPage() {
     const [saving, setSaving] = useState(false);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+    const [customCategory, setCustomCategory] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -68,11 +70,19 @@ export default function EditProductPage() {
                 if (companiesError) throw companiesError;
 
                 setCompanies(companiesData || []);
+
+                const cat = product.category || "";
+                const isCustom = cat && !categories.includes(cat);
+
+                if (isCustom) {
+                    setCustomCategory(cat);
+                }
+
                 setForm({
                     name: product.name,
                     company_id: product.company_id,
                     description: product.description || "",
-                    category: product.category || "",
+                    category: isCustom ? "Other" : cat,
                     link: product.link || "",
                     image_url: product.image_url || "",
                 });
@@ -98,6 +108,14 @@ export default function EditProductPage() {
             return;
         }
 
+        const finalCategory = form.category === "Other" ? customCategory.trim() : form.category;
+
+        if (form.category === "Other" && !finalCategory) {
+            setToast({ type: "error", message: "Please specify the custom category" });
+            setTimeout(() => setToast(null), 3000);
+            return;
+        }
+
         setSaving(true);
         try {
             const { error } = await supabase
@@ -106,7 +124,7 @@ export default function EditProductPage() {
                     name: form.name.trim(),
                     company_id: form.company_id,
                     description: form.description.trim(),
-                    category: form.category,
+                    category: finalCategory,
                     link: form.link.trim(),
                     image_url: form.image_url.trim(),
                 })
@@ -183,13 +201,33 @@ export default function EditProductPage() {
                                 id="category"
                                 className="input-field"
                                 value={form.category}
-                                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                                onChange={(e) => {
+                                    setForm({ ...form, category: e.target.value });
+                                    if (e.target.value !== "Other") {
+                                        setCustomCategory("");
+                                    }
+                                }}
                             >
                                 <option value="">Select category...</option>
                                 {categories.map((cat) => (
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
+                                {/* Add custom category as an option if it's not in the list and not Other */}
+                                {form.category && !categories.includes(form.category) && form.category !== "Other" && (
+                                    <option value={form.category}>{form.category}</option>
+                                )}
                             </select>
+                            {(form.category === "Other" || (form.category && !categories.includes(form.category))) && (
+                                <input
+                                    className="input-field"
+                                    type="text"
+                                    placeholder="Enter custom category..."
+                                    style={{ marginTop: 8 }}
+                                    value={customCategory}
+                                    onChange={(e) => setCustomCategory(e.target.value)}
+                                    required
+                                />
+                            )}
                         </div>
 
                         {/* Description */}
@@ -218,18 +256,12 @@ export default function EditProductPage() {
                             />
                         </div>
 
-                        {/* Image URL */}
-                        <div>
-                            <label className="label" htmlFor="image_url">Image URL</label>
-                            <input
-                                id="image_url"
-                                className="input-field"
-                                type="url"
-                                placeholder="https://example.com/product-image.png"
-                                value={form.image_url}
-                                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                            />
-                        </div>
+                        {/* Image */}
+                        <ImageUpload
+                            label="Product Image"
+                            value={form.image_url || ""}
+                            onChange={(url) => setForm({ ...form, image_url: url })}
+                        />
 
                         {/* Image Preview */}
                         {form.image_url && (
