@@ -1,32 +1,84 @@
+"use client";
+
 import { supabase } from "@/lib/supabase";
 import { Company, Product } from "@/lib/types";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import React from "react";
 
-export const revalidate = 0;
+// Note: We need a client component for interactivity (delete), 
+// but we want SEO from server components. 
+// For simplicity in this iteration, we'll convert to client component or use a hybrid approach.
+// Here we'll convert to a Client Component wrapper or just make it a Client Component 
+// since we need params and router.
+// Actually, standard Next.js App Router pattern is Server Component for data fetching, 
+// Client Component for interactive parts.
+// Let's make this file a Client Component now to handle Delete/Edit easily without prop drilling deeply.
 
-async function getCompany(id: string): Promise<Company | null> {
-    const { data } = await supabase.from("companies").select("*").eq("id", id).single();
-    return data;
-}
+export default function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const [id, setId] = useState<string>("");
+    const [company, setCompany] = useState<Company | null>(null);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+    const router = useRouter();
 
-async function getCompanyProducts(companyId: string): Promise<Product[]> {
-    const { data } = await supabase
-        .from("products")
-        .select("*, company:companies(*)")
-        .eq("company_id", companyId)
-        .order("created_at", { ascending: false });
-    return (data || []).map((p) => ({ ...p, company: p.company || undefined }));
-}
+    useEffect(() => {
+        const loadData = async () => {
+            const resolvedParams = await params;
+            setId(resolvedParams.id);
 
-export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const company = await getCompany(id);
+            const { data: companyData } = await supabase.from("companies").select("*").eq("id", resolvedParams.id).single();
+            const { data: productsData } = await supabase
+                .from("products")
+                .select("*, company:companies(*)")
+                .eq("company_id", resolvedParams.id)
+                .order("created_at", { ascending: false });
+
+            if (!companyData) {
+                setLoading(false);
+                return;
+            }
+
+            setCompany(companyData);
+            setProducts((productsData || []).map((p) => ({ ...p, company: p.company || undefined })));
+            setLoading(false);
+        };
+
+        loadData();
+    }, [params]);
+
+    const handleDelete = async () => {
+        // eslint-disable-next-line no-alert
+        if (!window.confirm("Are you sure you want to delete this company? All associated products will also be deleted.")) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase.from("companies").delete().eq("id", id);
+            if (error) throw error;
+
+            setToast({ type: "success", message: "Company deleted successfully" });
+            setTimeout(() => {
+                router.push("/companies");
+                router.refresh();
+            }, 1000);
+        } catch {
+            setToast({ type: "error", message: "Failed to delete company" });
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ display: "flex", justifyContent: "center", padding: "100px 0" }}>
+                <div className="spinner" />
+            </div>
+        );
+    }
 
     if (!company) return notFound();
-
-    const products = await getCompanyProducts(id);
 
     return (
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px" }}>
@@ -39,8 +91,32 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             </Link>
 
             {/* Company Header */}
-            <div className="glass-card fade-in" style={{ padding: 32, marginBottom: 40 }}>
-                <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div className="glass-card fade-in" style={{ padding: 32, marginBottom: 40, position: "relative" }}>
+                {/* Actions */}
+                <div style={{ position: "absolute", top: 24, right: 24, display: "flex", gap: 10 }}>
+                    <Link
+                        href={`/companies/${id}/edit`}
+                        className="btn-secondary"
+                        style={{ fontSize: 13, padding: "8px 16px", textDecoration: "none" }}
+                    >
+                        Edit
+                    </Link>
+                    <button
+                        onClick={handleDelete}
+                        className="btn-secondary"
+                        style={{
+                            fontSize: 13,
+                            padding: "8px 16px",
+                            borderColor: "rgba(239, 68, 68, 0.4)",
+                            color: "#f87171",
+                            background: "rgba(239, 68, 68, 0.1)"
+                        }}
+                    >
+                        Delete
+                    </button>
+                </div>
+
+                <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap", paddingRight: 140 }}>
                     {/* Logo */}
                     {company.logo_url ? (
                         <img
@@ -147,6 +223,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     <Link href="/products/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
                         + Add Product for {company.name}
                     </Link>
+                </div>
+            )}
+
+            {/* Toast */}
+            {toast && (
+                <div className={`toast ${toast.type === "success" ? "toast-success" : "toast-error"}`}>
+                    {toast.message}
                 </div>
             )}
         </div>

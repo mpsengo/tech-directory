@@ -35,10 +35,10 @@ export default function Footer() {
                             color: "white",
                         }}
                     >
-                        T
+                        X
                     </div>
                     <span style={{ fontSize: 14, color: "#6b7280" }}>
-                        TechVault — Technology Directory
+                        xTekMart — Future Tech Directory
                     </span>
                 </div>
                 <div style={{ display: "flex", gap: 24, fontSize: 13, color: "#6b7280" }}>

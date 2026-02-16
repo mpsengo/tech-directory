@@ -61,7 +61,7 @@ export default function Navbar() {
                             color: "white",
                         }}
                     >
-                        T
+                        X
                     </div>
                     <span
                         style={{
@@ -70,7 +70,7 @@ export default function Navbar() {
                             letterSpacing: "-0.02em",
                         }}
                     >
-                        Tech<span className="gradient-text">Vault</span>
+                        xTek<span className="gradient-text">Mart</span>
                     </span>
                 </Link>
 

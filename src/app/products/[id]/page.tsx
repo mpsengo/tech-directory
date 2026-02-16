@@ -1,23 +1,67 @@
+"use client";
+
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/lib/types";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
-export const revalidate = 0;
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const [id, setId] = useState<string>("");
+    const [product, setProduct] = useState<Product | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+    const router = useRouter();
 
-async function getProduct(id: string): Promise<Product | null> {
-    const { data } = await supabase
-        .from("products")
-        .select("*, company:companies(*)")
-        .eq("id", id)
-        .single();
-    if (!data) return null;
-    return { ...data, company: data.company || undefined };
-}
+    useEffect(() => {
+        const loadData = async () => {
+            const resolvedParams = await params;
+            setId(resolvedParams.id);
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    const product = await getProduct(id);
+            const { data } = await supabase
+                .from("products")
+                .select("*, company:companies(*)")
+                .eq("id", resolvedParams.id)
+                .single();
+
+            if (!data) {
+                setLoading(false);
+                return;
+            }
+
+            setProduct({ ...data, company: data.company || undefined });
+            setLoading(false);
+        };
+
+        loadData();
+    }, [params]);
+
+    const handleDelete = async () => {
+        if (!window.confirm("Are you sure you want to delete this product?")) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase.from("products").delete().eq("id", id);
+            if (error) throw error;
+
+            setToast({ type: "success", message: "Product deleted successfully" });
+            setTimeout(() => {
+                router.push("/products");
+                router.refresh();
+            }, 1000);
+        } catch {
+            setToast({ type: "error", message: "Failed to delete product" });
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ display: "flex", justifyContent: "center", padding: "100px 0" }}>
+                <div className="spinner" />
+            </div>
+        );
+    }
 
     if (!product) return notFound();
 
@@ -31,7 +75,31 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 ← Back to Products
             </Link>
 
-            <div className="glass-card fade-in" style={{ overflow: "hidden" }}>
+            <div className="glass-card fade-in" style={{ overflow: "hidden", position: "relative" }}>
+                {/* Actions */}
+                <div style={{ position: "absolute", top: 24, right: 24, display: "flex", gap: 10, zIndex: 10 }}>
+                    <Link
+                        href={`/products/${id}/edit`}
+                        className="btn-secondary"
+                        style={{ fontSize: 13, padding: "8px 16px", textDecoration: "none", background: "rgba(17, 24, 39, 0.9)" }}
+                    >
+                        Edit
+                    </Link>
+                    <button
+                        onClick={handleDelete}
+                        className="btn-secondary"
+                        style={{
+                            fontSize: 13,
+                            padding: "8px 16px",
+                            borderColor: "rgba(239, 68, 68, 0.4)",
+                            color: "#f87171",
+                            background: "rgba(17, 24, 39, 0.9)"
+                        }}
+                    >
+                        Delete
+                    </button>
+                </div>
+
                 {/* Image */}
                 {product.image_url && (
                     <div style={{ width: "100%", maxHeight: 400, overflow: "hidden" }}>
@@ -46,7 +114,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <div style={{ padding: 32 }}>
                     {/* Header */}
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
-                        <div>
+                        <div style={{ paddingRight: 140 }}>
                             <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 8 }}>
                                 {product.name}
                             </h1>
@@ -148,6 +216,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     </div>
                 </div>
             </div>
+
+            {/* Toast */}
+            {toast && (
+                <div className={`toast ${toast.type === "success" ? "toast-success" : "toast-error"}`}>
+                    {toast.message}
+                </div>
+            )}
         </div>
     );
 }

@@ -93,7 +93,7 @@ export default function ProductCard({ product }: { product: Product }) {
                                     width: 20,
                                     height: 20,
                                     borderRadius: 6,
-                                    background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                    background: "linear-gradient(135deg, #6366f1, #06b6d4)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",

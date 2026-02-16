@@ -52,7 +52,7 @@ export default async function HomePage() {
             }}
           >
             The Ultimate{" "}
-            <span className="gradient-text">Technology</span>
+            <span className="gradient-text">xTekMart</span>
             <br />
             Product Directory
           </h1>

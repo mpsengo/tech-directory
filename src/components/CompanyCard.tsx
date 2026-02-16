@@ -25,7 +25,7 @@ export default function CompanyCard({ company }: { company: Company }) {
                                 width: 48,
                                 height: 48,
                                 borderRadius: 12,
-                                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                background: "linear-gradient(135deg, #6366f1, #06b6d4)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",

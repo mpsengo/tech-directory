@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechVault — Discover Tech Companies & Products",
+  title: "xTekMart — Discover Local & Global Tech",
   description:
     "Explore and manage technology companies and their innovative products. Add companies and products, browse the directory, and stay up-to-date.",
   keywords: ["technology", "companies", "products", "directory", "SaaS", "startups"],
