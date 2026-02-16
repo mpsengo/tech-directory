@@ -40,6 +40,10 @@ export default function NewProductPage() {
     ];
 
     useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) router.push("/login"); // Redirect to login if no session
+        });
+
         const fetchCompanies = async () => {
             const { data } = await supabase
                 .from("companies")

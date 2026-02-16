@@ -44,6 +44,10 @@ export default function EditProductPage() {
     ];
 
     useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) router.push("/login");
+        });
+
         const fetchData = async () => {
             try {
                 // Fetch product

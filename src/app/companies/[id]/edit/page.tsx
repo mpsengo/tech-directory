@@ -39,6 +39,10 @@ export default function EditCompanyPage() {
     ];
 
     useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) router.push("/login");
+        });
+
         const fetchCompany = async () => {
             try {
                 const { data, error } = await supabase

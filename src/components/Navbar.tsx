@@ -1,28 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
     const pathname = usePathname();
-    const [menuOpen, setMenuOpen] = useState(false);
+    const router = useRouter();
+    const [isOpen, setIsOpen] = useState(false);
+    const [session, setSession] = useState<any>(null);
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+        });
+
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.refresh();
+    };
 
     const links = [
-        { href: "/", label: "Home" },
-        { href: "/companies", label: "Companies" },
-        { href: "/products", label: "Products" },
+        { label: "Home", href: "/" },
+        { label: "Companies", href: "/companies" },
+        { label: "Products", href: "/products" },
     ];
 
     return (
         <nav
             style={{
+                borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
                 position: "sticky",
                 top: 0,
                 zIndex: 50,
-                background: "rgba(3, 7, 18, 0.8)",
-                backdropFilter: "blur(20px)",
-                borderBottom: "1px solid rgba(55, 65, 81, 0.4)",
+                backgroundColor: "rgba(3, 7, 18, 0.8)",
+                backdropFilter: "blur(12px)",
             }}
         >
             <div
@@ -30,10 +52,10 @@ export default function Navbar() {
                     maxWidth: 1200,
                     margin: "0 auto",
                     padding: "0 24px",
+                    height: 70,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    height: 72,
                 }}
             >
                 {/* Logo */}
@@ -108,95 +130,132 @@ export default function Navbar() {
                         </Link>
                     ))}
                     <div style={{ width: 1, height: 24, background: "#374151", margin: "0 8px" }} />
-                    <Link href="/companies/new" className="btn-primary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none" }}>
-                        + Add Company
-                    </Link>
-                    <Link href="/products/new" className="btn-secondary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none" }}>
-                        + Add Product
-                    </Link>
+
+                    {session ? (
+                        <>
+                            <Link href="/companies/new" className="btn-primary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none" }}>
+                                + Add Company
+                            </Link>
+                            <Link href="/products/new" className="btn-secondary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none" }}>
+                                + Add Product
+                            </Link>
+                            <button
+                                onClick={handleSignOut}
+                                className="btn-secondary"
+                                style={{ fontSize: 14, padding: "8px 18px", marginLeft: 8 }}
+                            >
+                                Sign Out
+                            </button>
+                        </>
+                    ) : (
+                        <Link href="/login" className="btn-primary" style={{ fontSize: 14, padding: "8px 18px", textDecoration: "none" }}>
+                            Sign In
+                        </Link>
+                    )}
                 </div>
 
                 {/* Mobile Menu Button */}
                 <button
-                    onClick={() => setMenuOpen(!menuOpen)}
                     className="nav-mobile-btn"
+                    onClick={() => setIsOpen(!isOpen)}
                     style={{
-                        display: "none",
                         background: "none",
                         border: "none",
-                        color: "#9ca3af",
+                        color: "white",
                         cursor: "pointer",
-                        padding: 8,
                     }}
-                    aria-label="Toggle menu"
                 >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        {menuOpen ? (
-                            <>
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </>
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                    >
+                        {isOpen ? (
+                            <path d="M18 6L6 18M6 6l12 12" />
                         ) : (
-                            <>
-                                <line x1="3" y1="6" x2="21" y2="6" />
-                                <line x1="3" y1="12" x2="21" y2="12" />
-                                <line x1="3" y1="18" x2="21" y2="18" />
-                            </>
+                            <path d="M3 12h18M3 6h18M3 18h18" />
                         )}
                     </svg>
                 </button>
             </div>
 
             {/* Mobile Menu */}
-            {menuOpen && (
+            {isOpen && (
                 <div
-                    className="nav-mobile-menu"
+                    className="glass-card"
                     style={{
-                        padding: "12px 24px 24px",
+                        position: "absolute",
+                        top: 70,
+                        left: 0,
+                        right: 0,
+                        padding: 24,
+                        borderTop: "1px solid rgba(255,255,255,0.1)",
                         display: "flex",
                         flexDirection: "column",
-                        gap: 8,
-                        borderTop: "1px solid rgba(55,65,81,0.4)",
+                        gap: 16,
                     }}
                 >
                     {links.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
-                            onClick={() => setMenuOpen(false)}
+                            onClick={() => setIsOpen(false)}
                             style={{
-                                padding: "10px 16px",
-                                borderRadius: 8,
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: 500,
                                 textDecoration: "none",
-                                color: pathname === link.href ? "#818cf8" : "#9ca3af",
-                                background: pathname === link.href ? "rgba(99,102,241,0.1)" : "transparent",
+                                color: pathname === link.href ? "#818cf8" : "#d1d5db",
                             }}
                         >
                             {link.label}
                         </Link>
                     ))}
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                        <Link href="/companies/new" className="btn-primary" style={{ flex: 1, textAlign: "center", fontSize: 14, padding: "10px 18px", textDecoration: "none" }} onClick={() => setMenuOpen(false)}>
-                            + Company
+                    <div style={{ height: 1, background: "#374151", margin: "8px 0" }} />
+
+                    {session ? (
+                        <>
+                            <Link
+                                href="/companies/new"
+                                onClick={() => setIsOpen(false)}
+                                className="btn-primary"
+                                style={{ textAlign: "center", textDecoration: "none" }}
+                            >
+                                + Add Company
+                            </Link>
+                            <Link
+                                href="/products/new"
+                                onClick={() => setIsOpen(false)}
+                                className="btn-secondary"
+                                style={{ textAlign: "center", textDecoration: "none" }}
+                            >
+                                + Add Product
+                            </Link>
+                            <button
+                                onClick={() => {
+                                    handleSignOut();
+                                    setIsOpen(false);
+                                }}
+                                className="btn-secondary"
+                                style={{ width: "100%" }}
+                            >
+                                Sign Out
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            href="/login"
+                            onClick={() => setIsOpen(false)}
+                            className="btn-primary"
+                            style={{ textAlign: "center", textDecoration: "none" }}
+                        >
+                            Sign In
                         </Link>
-                        <Link href="/products/new" className="btn-secondary" style={{ flex: 1, textAlign: "center", fontSize: 14, padding: "10px 18px", textDecoration: "none" }} onClick={() => setMenuOpen(false)}>
-                            + Product
-                        </Link>
-                    </div>
+                    )}
                 </div>
             )}
-
-            <style>{`
-        @media (max-width: 768px) {
-          .nav-desktop { display: none !important; }
-          .nav-mobile-btn { display: block !important; }
-        }
-        @media (min-width: 769px) {
-          .nav-mobile-menu { display: none !important; }
-        }
-      `}</style>
         </nav>
     );
 }
