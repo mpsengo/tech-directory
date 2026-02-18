@@ -7,6 +7,7 @@ import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import React from "react";
+import { Session } from "@supabase/supabase-js";
 
 // Note: We need a client component for interactivity (delete), 
 // but we want SEO from server components. 
@@ -22,6 +23,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
     const [company, setCompany] = useState<Company | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [session, setSession] = useState<Session | null>(null);
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
     const router = useRouter();
 
@@ -48,6 +50,17 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
         };
 
         loadData();
+
+        // Listen for auth changes
+        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+            setSession(currentSession);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+            setSession(currentSession);
+        });
+
+        return () => subscription.unsubscribe();
     }, [params]);
 
     const handleDelete = async () => {
@@ -93,28 +106,30 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
             {/* Company Header */}
             <div className="glass-card fade-in" style={{ padding: 32, marginBottom: 40, position: "relative" }}>
                 {/* Actions */}
-                <div style={{ position: "absolute", top: 24, right: 24, display: "flex", gap: 10 }}>
-                    <Link
-                        href={`/companies/${id}/edit`}
-                        className="btn-secondary"
-                        style={{ fontSize: 13, padding: "8px 16px", textDecoration: "none" }}
-                    >
-                        Edit
-                    </Link>
-                    <button
-                        onClick={handleDelete}
-                        className="btn-secondary"
-                        style={{
-                            fontSize: 13,
-                            padding: "8px 16px",
-                            borderColor: "rgba(239, 68, 68, 0.4)",
-                            color: "#f87171",
-                            background: "rgba(239, 68, 68, 0.1)"
-                        }}
-                    >
-                        Delete
-                    </button>
-                </div>
+                {session && (
+                    <div style={{ position: "absolute", top: 24, right: 24, display: "flex", gap: 10 }}>
+                        <Link
+                            href={`/companies/${id}/edit`}
+                            className="btn-secondary"
+                            style={{ fontSize: 13, padding: "8px 16px", textDecoration: "none" }}
+                        >
+                            Edit
+                        </Link>
+                        <button
+                            onClick={handleDelete}
+                            className="btn-secondary"
+                            style={{
+                                fontSize: 13,
+                                padding: "8px 16px",
+                                borderColor: "rgba(239, 68, 68, 0.4)",
+                                color: "#f87171",
+                                background: "rgba(239, 68, 68, 0.1)"
+                            }}
+                        >
+                            Delete
+                        </button>
+                    </div>
+                )}
 
                 <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap", paddingRight: 140 }}>
                     {/* Logo */}
@@ -194,9 +209,11 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                 <h2 style={{ fontSize: 22, fontWeight: 700 }}>
                     Products <span style={{ color: "#6b7280", fontWeight: 400 }}>({products.length})</span>
                 </h2>
-                <Link href="/products/new" className="btn-primary" style={{ textDecoration: "none", fontSize: 14 }}>
-                    + Add Product
-                </Link>
+                {session && (
+                    <Link href="/products/new" className="btn-primary" style={{ textDecoration: "none", fontSize: 14 }}>
+                        + Add Product
+                    </Link>
+                )}
             </div>
 
             {products.length > 0 ? (
@@ -220,9 +237,11 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                         <line x1="12" y1="17" x2="12" y2="21" />
                     </svg>
                     <p style={{ color: "#6b7280", fontSize: 15, marginTop: 12 }}>No products yet</p>
-                    <Link href="/products/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
-                        + Add Product for {company.name}
-                    </Link>
+                    {session && (
+                        <Link href="/products/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
+                            + Add Product for {company.name}
+                        </Link>
+                    )}
                 </div>
             )}
 

@@ -26,7 +26,12 @@ async function getProducts(): Promise<Product[]> {
 }
 
 export default async function HomePage() {
-  const [companies, products] = await Promise.all([getCompanies(), getProducts()]);
+  const [sessionData, companies, products] = await Promise.all([
+    supabase.auth.getSession(),
+    getCompanies(),
+    getProducts()
+  ]);
+  const session = sessionData.data.session;
 
   return (
     <div>
@@ -67,16 +72,18 @@ export default async function HomePage() {
             }}
           >
             Explore innovative tech companies and their cutting-edge products.
-            Add new entries and build the definitive tech catalog.
+            {session && " Add new entries and build the definitive tech catalog."}
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/companies/new" className="btn-primary" style={{ textDecoration: "none", fontSize: 15, padding: "14px 28px" }}>
-              + Add Company
-            </Link>
-            <Link href="/products/new" className="btn-secondary" style={{ textDecoration: "none", fontSize: 15, padding: "14px 28px" }}>
-              + Add Product
-            </Link>
-          </div>
+          {session && (
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/companies/new" className="btn-primary" style={{ textDecoration: "none", fontSize: 15, padding: "14px 28px" }}>
+                + Add Company
+              </Link>
+              <Link href="/products/new" className="btn-secondary" style={{ textDecoration: "none", fontSize: 15, padding: "14px 28px" }}>
+                + Add Product
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -136,9 +143,11 @@ export default async function HomePage() {
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
             <p style={{ color: "#6b7280", fontSize: 15 }}>No companies yet.</p>
-            <Link href="/companies/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
-              Add Your First Company
-            </Link>
+            {session && (
+              <Link href="/companies/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
+                Add Your First Company
+              </Link>
+            )}
           </div>
         )}
       </section>
@@ -175,9 +184,11 @@ export default async function HomePage() {
               <line x1="12" y1="17" x2="12" y2="21" />
             </svg>
             <p style={{ color: "#6b7280", fontSize: 15 }}>No products yet.</p>
-            <Link href="/products/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
-              Add Your First Product
-            </Link>
+            {session && (
+              <Link href="/products/new" className="btn-primary" style={{ marginTop: 16, textDecoration: "none", fontSize: 14 }}>
+                Add Your First Product
+              </Link>
+            )}
           </div>
         )}
       </section>

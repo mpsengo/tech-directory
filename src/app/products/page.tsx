@@ -6,10 +6,13 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function ProductsPage() {
-    const { data: products } = await supabase
-        .from("products")
-        .select("*, company:companies(name, logo_url)")
-        .order("name");
+    const [sessionData, productsData] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase.from("products").select("*, company:companies(name, logo_url)").order("name")
+    ]);
+
+    const session = sessionData.data.session;
+    const products = productsData.data;
 
     // Transform data to match Product type if needed, or rely on Supabase return type compatibility
     // In this case, we pass it directly, assuming ProductGrid handles the structure.
@@ -34,9 +37,11 @@ export default async function ProductsPage() {
                         Find the best tools and software for your needs.
                     </p>
                 </div>
-                <Link href="/products/new" className="btn-primary" style={{ textDecoration: "none" }}>
-                    + Add Product
-                </Link>
+                {session && (
+                    <Link href="/products/new" className="btn-primary" style={{ textDecoration: "none" }}>
+                        + Add Product
+                    </Link>
+                )}
             </div>
 
             <ProductGrid products={products as any || []} />

@@ -6,10 +6,13 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CompaniesPage() {
-    const { data: companies } = await supabase
-        .from("companies")
-        .select("*")
-        .order("name");
+    const [sessionData, companiesData] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase.from("companies").select("*").order("name")
+    ]);
+
+    const session = sessionData.data.session;
+    const companies = companiesData.data;
 
     return (
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px" }}>
@@ -29,9 +32,11 @@ export default async function CompaniesPage() {
                         Explore the innovative tech companies in our directory.
                     </p>
                 </div>
-                <Link href="/companies/new" className="btn-primary" style={{ textDecoration: "none" }}>
-                    + Add Company
-                </Link>
+                {session && (
+                    <Link href="/companies/new" className="btn-primary" style={{ textDecoration: "none" }}>
+                        + Add Company
+                    </Link>
+                )}
             </div>
 
             <CompanyGrid companies={companies || []} />

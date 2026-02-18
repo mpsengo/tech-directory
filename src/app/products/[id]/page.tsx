@@ -5,11 +5,13 @@ import { Product } from "@/lib/types";
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Session } from "@supabase/supabase-js";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const [id, setId] = useState<string>("");
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
+    const [session, setSession] = useState<Session | null>(null);
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
     const router = useRouter();
 
@@ -34,6 +36,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         };
 
         loadData();
+
+        // Listen for auth changes
+        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+            setSession(currentSession);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+            setSession(currentSession);
+        });
+
+        return () => subscription.unsubscribe();
     }, [params]);
 
     const handleDelete = async () => {
@@ -77,28 +90,30 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             <div className="glass-card fade-in" style={{ overflow: "hidden", position: "relative" }}>
                 {/* Actions */}
-                <div style={{ position: "absolute", top: 24, right: 24, display: "flex", gap: 10, zIndex: 10 }}>
-                    <Link
-                        href={`/products/${id}/edit`}
-                        className="btn-secondary"
-                        style={{ fontSize: 13, padding: "8px 16px", textDecoration: "none", background: "rgba(17, 24, 39, 0.9)" }}
-                    >
-                        Edit
-                    </Link>
-                    <button
-                        onClick={handleDelete}
-                        className="btn-secondary"
-                        style={{
-                            fontSize: 13,
-                            padding: "8px 16px",
-                            borderColor: "rgba(239, 68, 68, 0.4)",
-                            color: "#f87171",
-                            background: "rgba(17, 24, 39, 0.9)"
-                        }}
-                    >
-                        Delete
-                    </button>
-                </div>
+                {session && (
+                    <div style={{ position: "absolute", top: 24, right: 24, display: "flex", gap: 10, zIndex: 10 }}>
+                        <Link
+                            href={`/products/${id}/edit`}
+                            className="btn-secondary"
+                            style={{ fontSize: 13, padding: "8px 16px", textDecoration: "none", background: "rgba(17, 24, 39, 0.9)" }}
+                        >
+                            Edit
+                        </Link>
+                        <button
+                            onClick={handleDelete}
+                            className="btn-secondary"
+                            style={{
+                                fontSize: 13,
+                                padding: "8px 16px",
+                                borderColor: "rgba(239, 68, 68, 0.4)",
+                                color: "#f87171",
+                                background: "rgba(17, 24, 39, 0.9)"
+                            }}
+                        >
+                            Delete
+                        </button>
+                    </div>
+                )}
 
                 {/* Image */}
                 {product.image_url && (
