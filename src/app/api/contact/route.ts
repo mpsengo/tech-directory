@@ -6,6 +6,13 @@ const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder");
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+    if (!process.env.RESEND_API_KEY) {
+        return NextResponse.json(
+            { error: "RESEND_API_KEY is not configured in Vercel/Environment variables." },
+            { status: 500 }
+        );
+    }
+
     try {
         const { name, email, subject, message } = await request.json();
 
