@@ -4,6 +4,7 @@ import CompanyCard from "@/components/CompanyCard";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 async function getCompanies(): Promise<Company[]> {

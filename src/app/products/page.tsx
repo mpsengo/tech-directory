@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProductGrid from "@/components/ProductGrid";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function ProductsPage() {

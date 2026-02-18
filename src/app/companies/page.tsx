@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import CompanyGrid from "@/components/CompanyGrid";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CompaniesPage() {
