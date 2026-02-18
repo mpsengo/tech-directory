@@ -25,8 +25,8 @@ export default function AdminDashboard({ initialCompanies, initialProducts }: Ad
             setCompanies(companies.filter(c => c.id !== id));
             // Also remove products associated with this company from local state if needed
             setProducts(products.filter(p => p.company_id !== id));
-        } catch (err: any) {
-            alert("Error deleting company: " + err.message);
+        } catch (err: unknown) {
+            alert("Error deleting company: " + (err instanceof Error ? err.message : "Unknown error"));
         }
     };
 
@@ -36,8 +36,8 @@ export default function AdminDashboard({ initialCompanies, initialProducts }: Ad
             const { error } = await supabase.from("products").delete().eq("id", id);
             if (error) throw error;
             setProducts(products.filter(p => p.id !== id));
-        } catch (err: any) {
-            alert("Error deleting product: " + err.message);
+        } catch (err: unknown) {
+            alert("Error deleting product: " + (err instanceof Error ? err.message : "Unknown error"));
         }
     };
 
@@ -109,7 +109,7 @@ export default function AdminDashboard({ initialCompanies, initialProducts }: Ad
                                 <tr key={company.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                                     <td style={{ padding: "16px 24px" }}>
                                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                            {company.logo_url && <img src={company.logo_url} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: "cover" }} />}
+                                            {company.logo_url && <img src={company.logo_url} alt={company.name} style={{ width: 24, height: 24, borderRadius: 4, objectFit: "cover" }} />}
                                             <span style={{ fontWeight: 500, color: "white" }}>{company.name}</span>
                                         </div>
                                     </td>
@@ -125,7 +125,7 @@ export default function AdminDashboard({ initialCompanies, initialProducts }: Ad
                                 <tr key={product.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                                     <td style={{ padding: "16px 24px" }}>
                                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                            {product.image_url && <img src={product.image_url} alt="" style={{ width: 24, height: 24, borderRadius: 4, objectFit: "cover" }} />}
+                                            {product.image_url && <img src={product.image_url} alt={product.name} style={{ width: 24, height: 24, borderRadius: 4, objectFit: "cover" }} />}
                                             <span style={{ fontWeight: 500, color: "white" }}>{product.name}</span>
                                         </div>
                                     </td>

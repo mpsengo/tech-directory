@@ -35,7 +35,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
 
             {filteredProducts.length === 0 && (
                 <div style={{ textAlign: "center", padding: 40, color: "#9ca3af" }}>
-                    No products found matching "{query}"
+                    No products found matching &quot;{query}&quot;
                 </div>
             )}
         </div>

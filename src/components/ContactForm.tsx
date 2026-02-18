@@ -32,13 +32,13 @@ export default function ContactForm() {
             }
 
             setToast({ type: "success", message: "Message sent! We'll get back to you soon." });
-            setForm({ name: "", email: "", subject: "", message: "" });
-            setTimeout(() => setToast(null), 5000);
-        } catch (err: any) {
-            setToast({ type: "error", message: err.message || "Failed to send message. Please try again." });
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to send message. Please try again.";
+            setToast({ type: "error", message: errorMessage });
             setTimeout(() => setToast(null), 5000);
         } finally {
             setLoading(false);
+            setForm({ name: "", email: "", subject: "", message: "" });
         }
     };
 

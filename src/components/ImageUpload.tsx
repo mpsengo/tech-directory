@@ -40,8 +40,8 @@ export default function ImageUpload({ value, onChange, label }: ImageUploadProps
             if (data) {
                 onChange(data.publicUrl);
             }
-        } catch (error: any) {
-            setError(error.message);
+        } catch (error: unknown) {
+            setError(error instanceof Error ? error.message : "An unknown error occurred");
         } finally {
             setUploading(false);
         }

@@ -34,8 +34,8 @@ export default function LoginPage() {
                 router.push("/");
                 router.refresh();
             }
-        } catch (error: any) {
-            setToast({ type: "error", message: error.message || "Authentication failed" });
+        } catch (error: unknown) {
+            setToast({ type: "error", message: (error instanceof Error ? error.message : "Authentication failed") });
         } finally {
             setLoading(false);
         }
@@ -89,7 +89,7 @@ export default function LoginPage() {
                 </form>
 
                 <div style={{ marginTop: 24, textAlign: "center", fontSize: 14, color: "#9ca3af" }}>
-                    {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+                    {isSignUp ? "Already have an account?" : "Don&apos;t have an account?"}{" "}
                     <button
                         onClick={() => setIsSignUp(!isSignUp)}
                         style={{
